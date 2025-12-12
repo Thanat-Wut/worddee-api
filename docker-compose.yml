@@ -1,0 +1,153 @@
+# ════════════════════════════════════════════════════════════════
+# WORDDEE-AI - Docker Compose Configuration
+# ════════════════════════════════════════════════════════════════
+# Orchestrates 5 services: worddee API, backend, frontend, postgres, n8n
+# Updated: 2025-12-12 - Renamed daily-vocab-api → worddee-api
+# ════════════════════════════════════════════════════════════════
+version: '3.9'
+services:
+ # ══════════════════════════════════════════════════════════════
+ # Worddee API - Vocabulary Management Microservice
+ # ══════════════════════════════════════════════════════════════
+ worddee_api:
+   build:
+     context: ../worddee-api
+     dockerfile: Dockerfile
+   container_name: worddee_api
+   ports:
+     - "8001:8001"
+   environment:
+     - DATABASE_URL=${DATABASE_URL}
+     - ADMIN_API_KEY=${VOCAB_API_KEY}
+     - CORS_ORIGINS=${CORS_ORIGINS}
+     - LOG_LEVEL=INFO
+   depends_on:
+     postgres:
+       condition: service_healthy
+   networks:
+     - worddee_network
+   volumes:
+     - ../worddee-api:/app
+   healthcheck:
+     test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+     interval: 30s
+     timeout: 10s
+     retries: 3
+   restart: unless-stopped
+ # ══════════════════════════════════════════════════════════════
+ # Worddee Backend - Practice Validation & Dashboard
+ # ══════════════════════════════════════════════════════════════
+ worddee_backend:
+   build:
+     context: ./backend
+     dockerfile: Dockerfile
+   container_name: worddee_backend
+   ports:
+     - "8000:8000"
+   environment:
+     - DATABASE_URL=${DATABASE_URL}
+     - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+     - VOCAB_API_URL=${VOCAB_API_URL}
+     - VOCAB_API_KEY=${VOCAB_API_KEY}
+     - CORS_ORIGINS=${CORS_ORIGINS}
+   depends_on:
+     postgres:
+       condition: service_healthy
+     worddee_api:
+       condition: service_healthy
+   networks:
+     - worddee_network
+   volumes:
+     - ./backend:/app
+   healthcheck:
+     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+     interval: 30s
+     timeout: 10s
+     retries: 3
+   restart: unless-stopped
+ # ══════════════════════════════════════════════════════════════
+ # Frontend - Next.js Application
+ # ══════════════════════════════════════════════════════════════
+ frontend:
+   build:
+     context: ./frontend
+     dockerfile: Dockerfile
+   container_name: worddee_frontend
+   ports:
+     - "3000:3000"
+   environment:
+     - NEXT_PUBLIC_WORDDEE_API_URL=${NEXT_PUBLIC_WORDDEE_API_URL}
+     - NEXT_PUBLIC_VOCAB_API_URL=${NEXT_PUBLIC_VOCAB_API_URL}
+   depends_on:
+     - worddee_backend
+     - worddee_api
+   networks:
+     - worddee_network
+   volumes:
+     - ./frontend:/app
+     - /app/node_modules
+     - /app/.next
+   healthcheck:
+     test: ["CMD", "curl", "-f", "http://localhost:3000"]
+     interval: 30s
+     timeout: 10s
+     retries: 3
+   restart: unless-stopped
+ # ══════════════════════════════════════════════════════════════
+ # PostgreSQL - Shared Database
+ # ══════════════════════════════════════════════════════════════
+ postgres:
+   image: postgres:16-alpine
+   container_name: worddee_postgres
+   ports:
+     - "5432:5432"
+   environment:
+     POSTGRES_USER: ${POSTGRES_USER}
+     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+     POSTGRES_DB: ${POSTGRES_DB}
+   volumes:
+     - postgres_data:/var/lib/postgresql/data
+     - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+   networks:
+     - worddee_network
+   healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+     interval: 10s
+     timeout: 5s
+     retries: 5
+   restart: unless-stopped
+ # ══════════════════════════════════════════════════════════════
+ # n8n - Workflow Automation & AI Integration
+ # ══════════════════════════════════════════════════════════════
+ n8n:
+   image: n8nio/n8n:latest
+   container_name: worddee_n8n
+   ports:
+     - "5678:5678"
+   environment:
+     - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
+     - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+     - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+     - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+   volumes:
+     - n8n_data:/home/node/.n8n
+     - ./n8n/workflows:/home/node/.n8n/workflows
+   networks:
+     - worddee_network
+   depends_on:
+     - worddee_backend
+   restart: unless-stopped
+# ════════════════════════════════════════════════════════════════
+# Networks
+# ════════════════════════════════════════════════════════════════
+networks:
+ worddee_network:
+   driver: bridge
+# ════════════════════════════════════════════════════════════════
+# Volumes
+# ════════════════════════════════════════════════════════════════
+volumes:
+ postgres_data:
+   driver: local
+ n8n_data:
+   driver: local
