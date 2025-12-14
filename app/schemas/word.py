@@ -1,16 +1,8 @@
-"""
-════════════════════════════════════════════════════════════════════
-WORDDEE-API - Pydantic Schemas (Simplified)
-════════════════════════════════════════════════════════════════════
-"""
+
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from app.db.models import DifficultyLevel
-
-# ════════════════════════════════════════════════════════════════
-# Request Schemas
-# ════════════════════════════════════════════════════════════════
 
 class WordCreate(BaseModel):
     """Schema for creating a new word"""
@@ -42,10 +34,6 @@ class WordUpdate(BaseModel):
     @classmethod
     def word_must_be_lowercase(cls, v: Optional[str]) -> Optional[str]:
         return v.lower().strip() if v else None
-
-# ════════════════════════════════════════════════════════════════
-# Response Schemas
-# ════════════════════════════════════════════════════════════════
 
 class WordResponse(BaseModel):
     """Schema for word response"""

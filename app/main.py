@@ -1,9 +1,3 @@
-"""
-════════════════════════════════════════════════════════════════════
-WORDDEE-API - Main Application
-════════════════════════════════════════════════════════════════════
-Vocabulary management microservice for Worddee.ai platform
-"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings

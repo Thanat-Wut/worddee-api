@@ -1,8 +1,3 @@
-"""
-════════════════════════════════════════════════════════════════════
-WORDDEE-API - Admin Word Endpoints (Protected)
-════════════════════════════════════════════════════════════════════
-"""
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
@@ -22,11 +17,6 @@ async def create_word(
     db: Session = Depends(get_db),
     api_key: str = Depends(verify_api_key)
 ):
-    """
-    Create a new word (Admin only)
-    
-    Requires `X-API-Key` header with valid admin API key.
-    """
     word = WordService.create_word(db, word_data)
     return word
 
@@ -37,11 +27,6 @@ async def update_word(
     db: Session = Depends(get_db),
     api_key: str = Depends(verify_api_key)
 ):
-    """
-    Update an existing word (Admin only)
-    
-    Requires `X-API-Key` header with valid admin API key.
-    """
     word = WordService.update_word(db, word_id, word_data)
     return word
 
@@ -51,10 +36,5 @@ async def delete_word(
     db: Session = Depends(get_db),
     api_key: str = Depends(verify_api_key)
 ):
-    """
-    Delete a word (Admin only)
-    
-    Requires `X-API-Key` header with valid admin API key.
-    """
     WordService.delete_word(db, word_id)
     return None

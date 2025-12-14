@@ -1,8 +1,3 @@
-"""
-════════════════════════════════════════════════════════════════════
-WORDDEE-API - Database Models
-════════════════════════════════════════════════════════════════════
-"""
 from sqlalchemy import Column, Integer, String, Text, DateTime, Enum
 from sqlalchemy.sql import func
 from app.db.database import Base

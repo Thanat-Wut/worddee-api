@@ -1,8 +1,3 @@
-"""
-════════════════════════════════════════════════════════════════════
-WORDDEE-API - Public Word Endpoints
-════════════════════════════════════════════════════════════════════
-"""
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -21,13 +16,6 @@ async def get_random_word(
     ),
     db: Session = Depends(get_db)
 ):
-    """
-    Get a random word (optionally filtered by difficulty)
-    
-    - **difficulty**: Beginner, Intermediate, or Advanced (optional)
-    
-    Returns a random vocabulary word for practice.
-    """
     word = WordService.get_random_word(db, difficulty)
     return word
 
@@ -39,14 +27,6 @@ async def list_words(
     search: Optional[str] = Query(None, description="Search in word or definition"),
     db: Session = Depends(get_db)
 ):
-    """
-    List all words with pagination and filters
-    
-    - **page**: Page number (default: 1)
-    - **page_size**: Items per page (default: 10, max: 100)
-    - **difficulty**: Filter by difficulty level (optional)
-    - **search**: Search query (optional)
-    """
     skip = (page - 1) * page_size
     words, total = WordService.get_words(db, skip, page_size, difficulty, search)
     
@@ -56,16 +36,10 @@ async def list_words(
         page_size=page_size,
         words=words
     )
-
 @router.get("/words/{word_id}", response_model=WordResponse)
 async def get_word(
     word_id: int,
     db: Session = Depends(get_db)
 ):
-    """
-    Get a specific word by ID
-    
-    - **word_id**: The ID of the word to retrieve
-    """
     word = WordService.get_word_by_id(db, word_id)
     return word

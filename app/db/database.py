@@ -1,21 +1,14 @@
-"""
-════════════════════════════════════════════════════════════════════
-WORDDEE-API - Database Connection
-════════════════════════════════════════════════════════════════════
-"""
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
-# Create engine
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,  # Verify connections before using
     pool_size=5,
     max_overflow=10
 )
-
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -23,17 +16,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
-    """
-    Database session dependency
-    
-    Yields:
-        Session: SQLAlchemy database session
-        
-    Example:
-        @app.get("/items")
-        def get_items(db: Session = Depends(get_db)):
-            return db.query(Item).all()
-    """
     db = SessionLocal()
     try:
         yield db
